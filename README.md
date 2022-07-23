@@ -2,16 +2,6 @@
 
 This project is a sign language alphabet recognizer using Python, openCV and tensorflow for training InceptionV3 model, a convolutional neural network model for classification.
 
-The framework used for the CNN implementation can be found here:
-
-[Simple transfer learning with an Inception V3 architecture model](https://github.com/xuetsing/image-classification-tensorflow) by xuetsing
-
-The project contains the dataset (1Go). If you are only interested in code, you better copy/paste the few files than cloning the entire project.
-
-You can [find the demo here](https://youtu.be/kBw-xGEIYhY)
-
-[![Demo](http://img.youtube.com/vi/kBw-xGEIYhY/0.jpg)](http://www.youtube.com/watch?v=kBw-xGEIYhY)
-
 ## Requirements
 
 This project uses python 3.5 and the PIP following packages:
