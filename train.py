@@ -188,7 +188,7 @@ def create_inception_graph():
     with tf.Graph().as_default() as graph:
         model_filename = os.path.join(FLAGS.model_dir, 'classify_image_graph_def.pb')
         with gfile.FastGFile(model_filename, 'rb') as f:
-            graph_def = tf.GraphDef()
+            graph_def = tf.compat.v1.GraphDef()
             graph_def.ParseFromString(f.read())
             bottleneck_tensor, jpeg_data_tensor, resized_input_tensor = (
                 tf.import_graph_def(graph_def, name='', return_elements=[
@@ -587,7 +587,7 @@ def add_input_distortions(flip_left_right, random_crop, random_scale,
         The jpeg input layer and the distorted result tensor.
   """
 
-    jpeg_data = tf.placeholder(tf.string, name='DistortJPGInput')
+    jpeg_data = tf.compat.v1.placeholder(tf.string, name='DistortJPGInput')
     decoded_image = tf.image.decode_jpeg(jpeg_data, channels=MODEL_INPUT_DEPTH)
     decoded_image_as_float = tf.cast(decoded_image, dtype=tf.float32)
     decoded_image_4d = tf.expand_dims(decoded_image_as_float, 0)
@@ -626,13 +626,13 @@ def variable_summaries(var):
     """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
     with tf.name_scope('summaries'):
         mean = tf.reduce_mean(var)
-        tf.summary.scalar('mean', mean)
+        tf.compat.v1.summary.scalar('mean', mean)
         with tf.name_scope('stddev'):
             stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
-        tf.summary.scalar('stddev', stddev)
-        tf.summary.scalar('max', tf.reduce_max(var))
-        tf.summary.scalar('min', tf.reduce_min(var))
-        tf.summary.histogram('histogram', var)
+        tf.compat.v1.summary.scalar('stddev', stddev)
+        tf.compat.v1.summary.scalar('max', tf.reduce_max(var))
+        tf.compat.v1.summary.scalar('min', tf.reduce_min(var))
+        tf.compat.v1.summary.histogram('histogram', var)
 
 
 def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
@@ -656,11 +656,11 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
         bottleneck input and ground truth input.
     """
     with tf.name_scope('input'):
-        bottleneck_input = tf.placeholder_with_default(
+        bottleneck_input = tf.compat.v1.placeholder_with_default(
                 bottleneck_tensor, shape=[None, BOTTLENECK_TENSOR_SIZE],
                 name='BottleneckInputPlaceholder')
 
-        ground_truth_input = tf.placeholder(tf.float32,
+        ground_truth_input = tf.compat.v1.placeholder(tf.float32,
                                         [None, class_count],
                                         name='GroundTruthInput')
 
@@ -669,7 +669,7 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
     layer_name = 'final_training_ops'
     with tf.name_scope(layer_name):
         with tf.name_scope('weights'):
-            initial_value = tf.truncated_normal([BOTTLENECK_TENSOR_SIZE, class_count],
+            initial_value = tf.random.truncated_normal([BOTTLENECK_TENSOR_SIZE, class_count],
                                           stddev=0.001)
 
             layer_weights = tf.Variable(initial_value, name='final_weights')
@@ -680,20 +680,20 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
             variable_summaries(layer_biases)
         with tf.name_scope('Wx_plus_b'):
             logits = tf.matmul(bottleneck_input, layer_weights) + layer_biases
-            tf.summary.histogram('pre_activations', logits)
+            tf.compat.v1.summary.histogram('pre_activations', logits)
 
     final_tensor = tf.nn.softmax(logits, name=final_tensor_name)
-    tf.summary.histogram('activations', final_tensor)
+    tf.compat.v1.summary.histogram('activations', final_tensor)
 
     with tf.name_scope('cross_entropy'):
-        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
+        cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(
                 labels=ground_truth_input, logits=logits)
         with tf.name_scope('total'):
             cross_entropy_mean = tf.reduce_mean(cross_entropy)
-    tf.summary.scalar('cross_entropy', cross_entropy_mean)
+    tf.compat.v1.summary.scalar('cross_entropy', cross_entropy_mean)
 
     with tf.name_scope('train'):
-        optimizer = tf.train.GradientDescentOptimizer(FLAGS.learning_rate)
+        optimizer = tf.compat.v1.train.GradientDescentOptimizer(FLAGS.learning_rate)
         train_step = optimizer.minimize(cross_entropy_mean)
 
     return (train_step, cross_entropy_mean, bottleneck_input, ground_truth_input,
@@ -718,15 +718,15 @@ def add_evaluation_step(result_tensor, ground_truth_tensor):
                     prediction, tf.argmax(ground_truth_tensor, 1))
         with tf.name_scope('accuracy'):
             evaluation_step = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    tf.summary.scalar('accuracy', evaluation_step)
+    tf.compat.v1.summary.scalar('accuracy', evaluation_step)
     return evaluation_step, prediction
 
 
 def main(_):
     # Setup the directory we'll write summaries to for TensorBoard
-    if tf.gfile.Exists(FLAGS.summaries_dir):
-        tf.gfile.DeleteRecursively(FLAGS.summaries_dir)
-    tf.gfile.MakeDirs(FLAGS.summaries_dir)
+    if tf.io.gfile.exists(FLAGS.summaries_dir):
+        tf.io.gfile.rmtree(FLAGS.summaries_dir)
+    tf.io.gfile.makedirs(FLAGS.summaries_dir)
 
     # Set up the pre-trained graph.
     maybe_download_and_extract()
@@ -776,15 +776,15 @@ def main(_):
                 final_tensor, ground_truth_input)
 
         # Merge all the summaries and write them out to the summaries_dir
-        merged = tf.summary.merge_all()
-        train_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/train',
+        merged = tf.compat.v1.summary.merge_all()
+        train_writer = tf.compat.v1.summary.FileWriter(FLAGS.summaries_dir + '/train',
                                          sess.graph)
 
-        validation_writer = tf.summary.FileWriter(
+        validation_writer = tf.compat.v1.summary.FileWriter(
                 FLAGS.summaries_dir + '/validation')
 
         # Set up all our weights to their initial default values.
-        init = tf.global_variables_initializer()
+        init = tf.compat.v1.global_variables_initializer()
         sess.run(init)
 
         # Run the training for as many cycles as requested on the command line.
@@ -857,7 +857,7 @@ def main(_):
 
         # Write out the trained graph and labels with the weights stored as
         # constants.
-        output_graph_def = graph_util.convert_variables_to_constants(
+        output_graph_def = tf.compat.v1.graph_util.convert_variables_to_constants(
                 sess, graph.as_graph_def(), [FLAGS.final_tensor_name])
         with gfile.FastGFile(FLAGS.output_graph, 'wb') as f:
             f.write(output_graph_def.SerializeToString())
@@ -1019,4 +1019,4 @@ if __name__ == '__main__':
         """
         )
     FLAGS, unparsed = parser.parse_known_args()
-    tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+    tf.compat.v1.app.run(main=main, argv=[sys.argv[0]] + unparsed)
