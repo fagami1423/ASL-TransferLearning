@@ -1,6 +1,6 @@
 python train.py \
   --bottleneck_dir=logs/bottlenecks \
-  --how_many_training_steps=20 \
+  --how_many_training_steps=10000 \
   --model_dir=inception \
   --summaries_dir=logs/training_summaries/basic \
   --output_graph=logs/trained_graph.pb \
