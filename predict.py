@@ -7,7 +7,6 @@ import pyttsx3
 engine = pyttsx3.init()
 # speak = wincl.Dispatch("SAPI.SpVoice")
 
-
 model = tf.keras.models.load_model('model.h5')
 
 cap = cv2.VideoCapture(0)

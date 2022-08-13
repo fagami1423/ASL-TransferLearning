@@ -4,7 +4,7 @@ This project is a sign language alphabet recognizer using Python, openCV and ten
 
 ## Requirements
 
-This project uses python 3.5 and the PIP following packages:
+This project uses python 3.8 and the PIP following packages:
 * opencv
 * tensorflow
 * matplotlib
