@@ -1,94 +1,61 @@
 import os
-import rem,
+import re
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.preprocessing.image import img_to_array
-from tensorflow.keras.preprocessing.image import load_img
-from tensorflow.keras.applications import IncetionV3
+import tensorflow.keras as keras
 
-class Model(tf.Module):
-    def __init__(self):
-        self.MAX_NUM_IMAGES_PER_CLASS=2**27-1
+class Model():
+       def __init__(self):
+            self.base_model = tf.keras.applications.InceptionV3(weights='imagenet', include_top=False)
+            self.base_model.trainable = False
+            
+        def load_images(folder_name):
+            image_size = (299, 299)
+            batch_size = 32
+
+            train_ds = tf.keras.preprocessing.image_dataset_from_directory(
+                folder_name,
+                validation_split=0.2,
+                subset="training",
+                seed=1337,
+                image_size=image_size,
+                batch_size=batch_size,
+            )
+            val_ds = tf.keras.preprocessing.image_dataset_from_directory(
+                folder_name,
+                validation_split=0.2,
+                subset="validation",
+                seed=1337,
+                image_size=image_size,
+                batch_size=batch_size,
+            )
+            return train_ds, val_ds
+
+        def get_model(self):
+            x = self.base_model.output
+            x = tf.keras.layers.GlobalAveragePooling2D()(x)
+            x = tf.keras.layers.Dense(1024, activation='relu')(x)
+            outputs = tf.keras.layers.Dense(900, activation='softmax')(x)
+            model = tf.keras.Model(inputs=self.base_model.input, outputs=outputs)
+            model.compile(optimizer = tf.keras.optimizers.SGD(lr=0.0001,momentum=0.9),
+                    loss = "sparse_categorical_crossentropy",
+                    metrics = ["accuracy"])
+            return model
         
-    #creating the singleton variable which detects variable creation in the first call
-    #throws error if there is variable creation in the second trace
-    def load_images(image_dir,testing_percentage,validation):
+        def save_model(self, model, model_name):
+            model.save("model/"+model_name)
+            print("Model saved")
+        
+        def load_model(self,model_name):
+            model = tf.keras.models.load_model(model_name)
+            return model
+        
+        
+        
 
-        """
-        Brief:
-            Builds a list of training images from the file system.
-            Analyzes the sub folders in the image directory, splits them into stable
-            training, testing, and validation sets, and returns a data structure
-            describing the lists of images for each label and their paths.
-        Args:
-            image_dir: String path to a folder containing subfolders of images.
-            testing_percentage: Integer percentage of the images to reserve for tests.
-            validation_percentage: Integer percentage of images reserved for validation.
-        Returns:
-            A dictionary containing an entry for each label subfolder, with images split
-            into training, testing, and validation sets within each label.
-        """
-        if not gfile.Exists(image_dir):
-            print("Image directory '" + image_dir + "' not found.")
-            return None
-        result = {}
-        sub_dirs = [x[0] for x in gfile.Walk(image_dir)]
-        # The root directory comes first, so skip it.
-        is_root_dir = True
-        for sub_dir in sub_dirs:
-            if is_root_dir:
-                is_root_dir = False
-                continue
-            extensions = ['jpg', 'jpeg', 'JPG', 'JPEG']
-            file_list = []
-            dir_name = os.path.basename(sub_dir)
-            if dir_name == image_dir:
-                continue
-            print("Looking for images in '" + dir_name + "'")
-            for extension in extensions:
-                file_glob = os.path.join(image_dir, dir_name, '*.' + extension)
-                file_list.extend(gfile.Glob(file_glob))
-            if not file_list:
-                print('No files found')
-                continue
-            if len(file_list) < 20:
-                print('WARNING: Folder has less than 20 images, which may cause issues.')
-            elif len(file_list) > MAX_NUM_IMAGES_PER_CLASS:
-                print('WARNING: Folder {} has more than {} images. Some images will '
-                    'never be selected.'.format(dir_name, MAX_NUM_IMAGES_PER_CLASS))
-            label_name = re.sub(r'[^a-z0-9]+', ' ', dir_name.lower())
-            training_images = []
-            testing_images = []
-            validation_images = []
-            for file_name in file_list:
-                base_name = os.path.basename(file_name)
-                # We want to ignore anything after '_nohash_' in the file name when
-                # deciding which set to put an image in, the data set creator has a way of
-                # grouping photos that are close variations of each other. For example
-                # this is used in the plant disease data set to group multiple pictures of
-                # the same leaf.
-                hash_name = re.sub(r'_nohash_.*$', '', file_name)
-                # This looks a bit magical, but we need to decide whether this file should
-                # go into the training, testing, or validation sets, and we want to keep
-                # existing files in the same set even if more files are subsequently
-                # added.
-                # To do that, we need a stable way of deciding based on just the file name
-                # itself, so we do a hash of that and then use that to generate a
-                # probability value that we use to assign it.
-                hash_name_hashed = hashlib.sha1(compat.as_bytes(hash_name)).hexdigest()
-                percentage_hash = ((int(hash_name_hashed, 16) %
-                                    (MAX_NUM_IMAGES_PER_CLASS + 1)) *
-                                (100.0 / MAX_NUM_IMAGES_PER_CLASS))
-                if percentage_hash < validation_percentage:
-                    validation_images.append(base_name)
-                elif percentage_hash < (testing_percentage + validation_percentage):
-                    testing_images.append(base_name)
-                else:
-                    training_images.append(base_name)
-            result[label_name] = {
-                'dir': dir_name,
-                'training': training_images,
-                'testing': testing_images,
-                'validation': validation_images,
-                }
-        return result
+    
+            
+
+
+        
+    
+        
