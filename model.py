@@ -2,6 +2,7 @@ import os
 import re
 import tensorflow as tf
 import tensorflow.keras as keras
+import matplotlib.pyplot as plt
 
 class Model():
     def __init__(self):
@@ -48,6 +49,31 @@ class Model():
     def load_model(self,model_name):
         model = tf.keras.models.load_model(model_name)
         return model
+
+    def plot_accuracy_curve(self, history):
+        acc = history.history['accuracy']
+        val_acc = history.history['val_accuracy']
+
+        loss = history.history['loss']
+        val_loss = history.history['val_loss']
+
+        plt.figure(figsize=(8,8))
+        plt.subplot(211)
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.subplot(212)
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+        plt.savefig('accuracy_curve.png')
     
     
     
