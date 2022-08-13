@@ -1,6 +1,11 @@
-# SLR Alphabet Recognizer
+# Sign Language Recognition using Keras InceptionV3 (Transfer Learning ) 
 
-This project is a sign language alphabet recognizer using Python, openCV and tensorflow for training InceptionV3 model, a convolutional neural network model for classification.
+This project is a sign language alphabet recognizer using Python, openCV and tensorflow for training InceptionV3 model, a convolutional neural network model for classification of the american sign language.
+
+## Major Goals
+- Predict the Sign to text
+- Convert text to speech
+
 
 ## Requirements
 
@@ -10,43 +15,34 @@ This project uses python 3.8 and the PIP following packages:
 * matplotlib
 * numpy
 
+```
+pip install -r requirements.txt
+```
+
 See requirements.txt and Dockerfile for versions and required APT packages
 
 ### Using Docker
 ```
-docker build -t hands-classifier .
-docker run -it hands-classifier bash
+docker build -t sign-classifier .
+docker run -it sign-classifier bash
 ```
 ### Install using PIP
 ```
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
 ## Training
 
 To train the model, use the following command (see framework github link for more command options):
 ```
-python3 train.py \
-  --bottleneck_dir=logs/bottlenecks \
-  --how_many_training_steps=20 \
-  --model_dir=inception \
-  --summaries_dir=logs/training_summaries/basic \
-  --output_graph=logs/trained_graph.pb \
-  --output_labels=logs/trained_labels.txt \
-  --image_dir=./dataset
+python train.py
 ```
 If you're using the provided dataset, it may take up to three hours.
   
-## Classifying
+## Classifying using webcam (demo)
   
 To test classification, use the following command:
 ```
-python3 classify.py path/to/image.jpg
+python predict.py
 ```
 
-## Using webcam (demo)
 
-To use webcam, use the following command:
-```
-python3 classify_webcam.py
-```
-Your hand must be inside the rectangle. Keep position to write word, see demo for deletions.
