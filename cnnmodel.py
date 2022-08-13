@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 
 class Model():
     def __init__(self):
-        self.base_model = tf.keras.applications.InceptionV3(weights='imagenet', include_top=False)
+        self.base_model = keras.applications.InceptionV3(weights='imagenet', include_top=False)
         self.base_model.trainable = False
             
-    def load_images(folder_name):
+    def load_images(self,folder_name):
         image_size = (299, 299)
         batch_size = 32
 
-        train_ds = tf.keras.preprocessing.image_dataset_from_directory(
+        train_ds = keras.preprocessing.image_dataset_from_directory(
             folder_name,
             validation_split=0.2,
             subset="training",
@@ -21,7 +21,7 @@ class Model():
             image_size=image_size,
             batch_size=batch_size,
         )
-        val_ds = tf.keras.preprocessing.image_dataset_from_directory(
+        val_ds = keras.preprocessing.image_dataset_from_directory(
             folder_name,
             validation_split=0.2,
             subset="validation",
@@ -33,11 +33,11 @@ class Model():
 
     def get_model(self):
         x = self.base_model.output
-        x = tf.keras.layers.GlobalAveragePooling2D()(x)
-        x = tf.keras.layers.Dense(1024, activation='relu')(x)
-        outputs = tf.keras.layers.Dense(900, activation='softmax')(x)
-        model = tf.keras.Model(inputs=self.base_model.input, outputs=outputs)
-        model.compile(optimizer = tf.keras.optimizers.SGD(lr=0.0001,momentum=0.9),
+        x = keras.layers.GlobalAveragePooling2D()(x)
+        x = keras.layers.Dense(1024, activation='relu')(x)
+        outputs = keras.layers.Dense(900, activation='softmax')(x)
+        model = keras.Model(inputs=self.base_model.input, outputs=outputs)
+        model.compile(optimizer = keras.optimizers.SGD(learning_rate=0.0001,momentum=0.9),
                 loss = "sparse_categorical_crossentropy",
                 metrics = ["accuracy"])
         return model
@@ -47,7 +47,7 @@ class Model():
         print("Model saved")
     
     def load_model(self,model_name):
-        model = tf.keras.models.load_model(model_name)
+        model = keras.models.load_model(model_name)
         return model
 
     def plot_accuracy_curve(self, history):
@@ -74,8 +74,9 @@ class Model():
         plt.legend(['train', 'test'], loc='upper left')
         plt.show()
         plt.savefig('accuracy_curve.png')
-    
-    
+
+
+
     
 
 

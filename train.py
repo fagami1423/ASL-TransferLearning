@@ -1,7 +1,7 @@
 
 import matplotlib.pyplot as plt
 
-from Model import Model
+from cnnmodel import Model
 
 base_model = Model()
 
