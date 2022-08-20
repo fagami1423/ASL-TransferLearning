@@ -11,8 +11,7 @@ WORKDIR /handstracker
 
 ADD requirements.txt /handstracker
 ADD train.py /handstracker
-ADD classify.py /handstracker
-ADD classify_webcam.py /handstracker
+ADD predict.py /handstracker
 COPY dataset /handstracker/dataset/
 
 RUN pip3 install -r requirements.txt
